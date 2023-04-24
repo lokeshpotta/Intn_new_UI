@@ -1,4 +1,14 @@
 <resources>
     <string name="app_name">PROJECT_3</string>
     <string name="title_activity_maps">MapsActivity</string>
+    <string name="select_device">Select Device</string>
+    <string name="select_view">Select View</string>
+    <string-array name="devices">
+        <item>Select Device</item>
+
+    </string-array>
+    <string-array name="views">
+
+
+    </string-array>
 </resources>

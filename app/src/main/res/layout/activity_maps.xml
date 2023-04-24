@@ -1,16 +1,44 @@
-<?xml version="1.0" encoding="utf-8"?>
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MapsActivity">
+    <LinearLayout
+        android:id="@+id/layout_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/cardview_dark_background"
+        android:padding="7dp"
+        >
+
+        <Spinner
+            android:id="@+id/spinner_devices"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:entries="@array/devices"
+            android:prompt="@string/select_device"
+            />
+
+        <Spinner
+            android:id="@+id/spinner_views"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:entries="@array/views"
+            android:prompt="@string/select_view"/>
+    </LinearLayout>
+
+
 
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below = "@+id/layout_header"
         android:layout_above="@+id/layout_bottom" />
 
 
@@ -23,95 +51,102 @@
         android:orientation="horizontal"
         android:padding="10dp">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.5"
-            android:orientation="vertical">
 
-            <Button
-                android:id="@+id/button_show_current_location"
-                android:layout_width="190dp"
-                android:layout_height="wrap_content"
-                android:background="@color/cardview_dark_background"
-                android:text="Current Location"
-                android:textSize="12sp"
-                android:textColor="@android:color/white" />
 
-            <Button
-                android:id="@+id/button_show_bluetooth_location"
-                android:layout_width="190dp"
-                android:layout_height="wrap_content"
-                android:background="@color/cardview_dark_background"
-                android:text="Bluetooth Location"
-                android:textSize="12sp"
-                android:textColor="@android:color/white" />
-        </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="60dp"
-            android:layout_height="98dp"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-            <TextView
-                android:id="@+id/text_distance"
-                android:layout_width="match_parent"
-                android:layout_height="35dp"
-                android:gravity="center"
-                android:text="0.0 km"
-                android:textColor="@android:color/white"
-                android:textSize="15sp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="15dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="Latitude"
-                    android:textColor="@android:color/white"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/text_latitude"
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:text="0.0"
-                    android:textColor="@android:color/white"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                    android:layout_weight="1.5"
+                    android:orientation="vertical">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                    <Button
+                        android:id="@+id/button_show_current_location"
+                        android:layout_width="190dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:background="@color/cardview_dark_background"
+                        android:text="Current Location"
+                        android:textSize="12sp"
+                        android:textColor="@android:color/white" />
 
-                <TextView
-                    android:layout_width="15dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Longitude"
-                    android:textColor="@android:color/white"
-                    android:textSize="12sp" />
+                    <Button
+                        android:id="@+id/button_show_bluetooth_location"
+                        android:layout_width="190dp"
+                        android:gravity="center"
+                        android:layout_height="wrap_content"
+                        android:background="@color/cardview_dark_background"
+                        android:text="Bluetooth Location"
+                        android:textSize="12sp"
+                        android:textColor="@android:color/white" />
+                </LinearLayout>
 
-                <TextView
-                    android:id="@+id/text_longitude"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                <LinearLayout
+                    android:layout_width="60dp"
+                    android:layout_height="98dp"
                     android:layout_weight="1"
-                    android:gravity="end"
-                    android:text="0.0"
-                    android:textColor="@android:color/white"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </LinearLayout>
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:id="@+id/text_distance"
+                        android:layout_width="match_parent"
+                        android:layout_height="35dp"
+                        android:gravity="center"
+                        android:text="0.0 m"
+                        android:textColor="@android:color/white"
+                        android:textSize="15sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="15dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="Latitude"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/text_latitude"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:text="0.0"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="15dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Longitude"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/text_longitude"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="end"
+                            android:text="0.0"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
     </LinearLayout>
 </RelativeLayout>
+
 
