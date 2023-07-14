@@ -13,14 +13,14 @@
         android:padding="7dp"
         >
 
-        <Spinner
-            android:id="@+id/spinner_devices"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:entries="@array/devices"
-            android:prompt="@string/select_device"
-            />
+<!--        <Spinner-->
+<!--            android:id="@+id/spinner_devices"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1"-->
+<!--            android:entries="@array/devices"-->
+<!--            android:prompt="@string/select_device"-->
+<!--            />-->
 
         <Spinner
             android:id="@+id/spinner_views"

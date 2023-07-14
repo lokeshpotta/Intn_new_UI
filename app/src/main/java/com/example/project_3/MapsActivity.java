@@ -6,9 +6,9 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -42,6 +42,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -57,7 +58,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private TextView textLatitude;
     private TextView textLongitude;
     private LatLng currentLocation = new LatLng(0, 0);
-    private LatLng bluetoothLocation = new LatLng(31.399080, 75.54000);
+    private LatLng bluetoothLocation = null;
     ;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothDevice bluetoothDevice;
@@ -122,16 +123,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         textLatitude = findViewById(R.id.text_latitude);
         textLongitude = findViewById(R.id.text_longitude);
 
-        spinnerDevices = findViewById(R.id.spinner_devices);
+        //  spinnerDevices = findViewById(R.id.spinner_devices);
         spinnerViews = findViewById(R.id.spinner_views);
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-//        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-//        registerReceiver(mReceiver, filter);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
 
-        }
-        bluetoothAdapter.startDiscovery();
         views.add("Normal Map");
         views.add("Hybrid Map");
         views.add("Satellite Map");
@@ -145,36 +141,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             bluetoothEnableLauncher.launch(enableBtIntent);
         } else {
-          //  getPairedDevices();
+            getPairedDevices();
         }
 
         IntentFilter intent = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, pairedDevices);
-        spinnerDevices.setAdapter(spinnerAdapter);
+        // spinnerDevices.setAdapter(spinnerAdapter);
 
-        spinnerDevices.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-                if (position == 0) {
-                    return;
-                }
-                // Connect to the selected device
-                String deviceName = pairedDevices.get(position);
+//        spinnerDevices.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//
+//                if (position == 0) {
+//                    return;
+//                }
+//                // Connect to the selected device
+//                String deviceName = pairedDevices.get(position);
 //                BluetoothDevice selectedDevice = getPairedDeviceByName(deviceName);
+//
 //                if (selectedDevice != null) {
-//                    connectToBluetoothDevice(deviceName);
+//                    try {
+//                        connectToBluetoothDevice(deviceName);
+//                        Toast.makeText(getApplicationContext(), "Connected to " + deviceName, Toast.LENGTH_SHORT).show();
+//                    }
+//                    catch(Exception e){
+//                        Toast.makeText(getApplicationContext(), "Failed to connect", Toast.LENGTH_SHORT).show();
+//                        return ;
+//                    }
 //                } else {
 //                    Toast.makeText(getApplicationContext(), "Device not found", Toast.LENGTH_SHORT).show();
+//                    return ;
 //                }
-                Toast.makeText(getApplicationContext(), "Connected to " + deviceName, Toast.LENGTH_SHORT).show();
+//
+//
+//            }
 
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//            }
+//        });
 
         spinnerViews.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -227,18 +232,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
 
-                if (bluetoothLocation != null) {
-
-                    String address = getAddressFromLocation(bluetoothLocation.latitude, bluetoothLocation.longitude);
-//                    btLocMarker.setPosition(bluetoothLocation);
-//                    btLocMarker.setTitle("Bluetooth location: " + address);
-                    mMap.addMarker(new MarkerOptions().position(bluetoothLocation).title("Bluetooth Location: " + address));
-
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(bluetoothLocation, 15f));
-                } else {
+//                if (bluetoothLocation != null) {
+//
+//                    String address = getAddressFromLocation(bluetoothLocation.latitude, bluetoothLocation.longitude);
+////                    btLocMarker.setPosition(bluetoothLocation);
+////                    btLocMarker.setTitle("Bluetooth location: " + address);
+//                    mMap.addMarker(new MarkerOptions().position(bluetoothLocation).title("Bluetooth Location: " + address));
+//
+//                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(bluetoothLocation, 15f));
+//                } else {
+                try {
                     connectToHC05();
-                    //  Toast.makeText(MapsActivity.this, "Bluetooth Location not available", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(MapsActivity.this, "Unable to Connect to Bluetooth", Toast.LENGTH_SHORT).show();
                 }
+                //  Toast.makeText(MapsActivity.this, "Bluetooth Location not available", Toast.LENGTH_SHORT).show();
+//                }
             }
         });
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -246,26 +256,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
     }
 
-    //    BroadcastReceiver myReceiver = new BroadcastReceiver() {
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//             String action = intent.getAction();
-//             if(BluetoothDevice.ACTION_FOUND.equals(action)){
-//                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-//                 pairedDevices.add(device.getName());
-//             }
-//        }
-//    };
-    // Get the list of paired devices
     private void getPairedDevices() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
 
         }
         Set<BluetoothDevice> pairedDevs = bluetoothAdapter.getBondedDevices();
@@ -274,31 +266,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             for (BluetoothDevice device : pairedDevs) {
                 pairedDevices.add(device.getName());
             }
-            // spinnerAdapter.notifyDataSetChanged();
-
         }
     }
 
+
     private void connectToHC05() {
         // Get the Bluetooth device by its address (replace with the actual MAC address of your HC-05 module)
-        bluetoothDevice = bluetoothAdapter.getRemoteDevice("00:00:00:00:00:00"); // Replace with your HC-05 MAC address
+
+     // Replace with your HC-05 MAC address
 
         try {
+            String mac =  getConnectedDeviceMacAddress();
+            bluetoothDevice = bluetoothAdapter.getRemoteDevice(mac);
             // Create a Bluetooth socket for communication with the device
             UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); // Standard SPP UUID
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
+
             }
             bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuid);
-            bluetoothSocket.connect();
-
+            boolean connected = false;
+            while (!connected) {
+                try {
+                    if (!bluetoothSocket.isConnected()) {
+                        bluetoothSocket.connect();
+                    }
+                    connected = true; // Connection successful
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    try {
+                        Thread.sleep(1000); // Adjust the delay time as needed
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
             // Start reading data from the Bluetooth socket
             InputStream inputStream = bluetoothSocket.getInputStream();
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -306,43 +307,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // Read data from Bluetooth module
             String data;
             while ((data = bufferedReader.readLine()) != null) {
-                // Parse the received data to get location coordinates
-                String[] coordinates = data.split(","); // Assuming the data is in comma-separated format (e.g. "latitude,longitude")
-                double latitude = Double.parseDouble(coordinates[0]);
-                double longitude = Double.parseDouble(coordinates[1]);
+                if (!data.equals("")) {
+                    // Parse the received data to get location coordinates
+                    String[] coordinates = data.split(","); // Assuming the data is in comma-separated format (e.g. "latitude,longitude")
+                    double latitude = Double.parseDouble(coordinates[0]);
+                    double longitude = Double.parseDouble(coordinates[1]);
+                    // Update marker on map
+                    if (bluetoothLocation == null) {
+                        LatLng latLng = new LatLng(latitude, longitude);
+                        bluetoothLocation = latLng;
+                        // If marker is not yet initialized, create marker
+                        //  bluetoothLocation =  new LatLng(51.6783, 65.8978);
+                        String address = getAddressFromLocation(bluetoothLocation.latitude, bluetoothLocation.longitude);
 
-                // Update marker on map
-                LatLng latLng = new LatLng(latitude, longitude);
-                bluetoothLocation = latLng;
-                if (bluetoothMarker == null) {
-                    // If marker is not yet initialized, create marker
+                        btLocMarker = mMap.addMarker(new MarkerOptions().position(bluetoothLocation).title("Bluetooth Location: " + address));
+                        ;
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bluetoothLocation, 15f));
+                    } else {
+                        // If marker is already initialized, update position
 
-                    String address = getAddressFromLocation(bluetoothLocation.latitude, bluetoothLocation.longitude);
-                    mMap.addMarker(new MarkerOptions().position(bluetoothLocation).title("Bluetooth Location: " + address));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bluetoothLocation, 15f));
-                } else {
-                    // If marker is already initialized, update position
-
-                    String address = getAddressFromLocation(bluetoothLocation.latitude, bluetoothLocation.longitude);
-                    btLocMarker.setPosition(bluetoothLocation);
-                    btLocMarker.setTitle("Bluetooth location: " + address);
-                }
-
-                // Calculate distance between current location and Bluetooth device location
-                float[] results = new float[1];
-                if (currentLocation != null) {
-                    Location.distanceBetween(currentLocation.latitude, currentLocation.longitude, latitude, longitude, results);
-
-                    float distance = results[0];
-                    textDistance.setText(String.format("%6f m", distance));
-                    if (distance > 200) {
-                        // If distance is greater than 1 km, send notification
-                        sendNotification();
+                        String address = getAddressFromLocation(bluetoothLocation.latitude, bluetoothLocation.longitude);
+                        btLocMarker.setPosition(bluetoothLocation);
+                        btLocMarker.setTitle("Bluetooth location: " + address);
                     }
+                } else {
+                    break;
                 }
             }
 
         } catch (IOException e) {
+            Toast.makeText(MapsActivity.this, "Some error in getting data from bluetooth", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
     }
@@ -391,7 +385,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 currLocMarker.setPosition(currentLocation);
                 currLocMarker.setTitle("Current location: " + address);
                 float[] results = new float[1];
-                if (currentLocation != null) {
+                if (currentLocation != null && bluetoothLocation != null) {
                     Location.distanceBetween(currentLocation.latitude, currentLocation.longitude, bluetoothLocation.latitude, bluetoothLocation.longitude, results);
 
                     distance = results[0];
@@ -405,6 +399,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    private String getConnectedDeviceMacAddress() {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            // Bluetooth is not supported on this device
+            return null;
+        }
+
+        if (!bluetoothAdapter.isEnabled()) {
+            // Bluetooth is not enabled
+            return null;
+        }
+
+        BluetoothAdapter.getDefaultAdapter();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+        }
+        Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
+
+        for (BluetoothDevice device : bondedDevices) {
+            BluetoothClass bluetoothClass = device.getBluetoothClass();
+            if (bluetoothClass.getMajorDeviceClass() == BluetoothClass.Device.Major.UNCATEGORIZED) {
+                try {
+                    Method method = device.getClass().getMethod("getAddress");
+                    String macAddress = (String) method.invoke(device);
+                    return macAddress;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return null; // No connected Bluetooth device found
+    }
 
     private String getAddressFromLocation(double latitude, double longitude) {
         Geocoder geocoder = new Geocoder(MapsActivity.this, Locale.getDefault());
@@ -425,65 +452,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return address;
     }
 
-    // Get Bluetooth device by name
-    private BluetoothDevice getPairedDeviceByName(String deviceName) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-
-        }
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-        if (pairedDevices != null && pairedDevices.size() > 0) {
-            for (BluetoothDevice device : pairedDevices) {
-                if (device.getName().equals(deviceName)) {
-                    return device;
-                }
-            }
-        }
-        return null; // Device not found
-    }
-
-    // Method to connect to a Bluetooth device
-
-    private void connectToBluetoothDevice(String deviceName) {
-        BluetoothDevice device = getPairedDeviceByName(deviceName);
-        if (device != null) {
-            // Check if Bluetooth is enabled
-            if (bluetoothAdapter.isEnabled()) {
-                // Create a BluetoothSocket to connect to the device
-                BluetoothSocket socket = null;
-                try {
-                    // Use the device's UUID for the connection
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-
-
-                    }
-                    UUID uuid = device.getUuids()[0].getUuid();
-                    socket = device.createRfcommSocketToServiceRecord(uuid);
-                    // Connect to the device
-                    socket.connect();
-                    // Connection successful, you can now send/receive data
-                    // using the socket.getInputStream() and socket.getOutputStream() methods
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    // Failed to connect to the device
-                    Toast.makeText(this, "Failed to connect to the device", Toast.LENGTH_SHORT).show();
-                } finally {
-                    // Close the socket when done
-                    if (socket != null) {
-                        try {
-                            socket.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            } else {
-                // Bluetooth is not enabled, prompt the user to enable it
-
-            }
-        } else {
-            Toast.makeText(this, "Device not found", Toast.LENGTH_SHORT).show();
-        }
-    }
 
 //    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 //        public void onReceive(Context context, Intent intent) {
@@ -507,36 +475,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //            }
 //        }
 //    };
-
-    // Method to get Bluetooth Location coordinates from address
-    private LatLng getBluetoothLocationFromAddress(Context context, String address) {
-        Geocoder geocoder = new Geocoder(context);
-        List<Address> addresses;
-        try {
-            addresses = geocoder.getFromLocationName(address, 1);
-            if (addresses != null && addresses.size() > 0) {
-                double latitude = addresses.get(0).getLatitude();
-                double longitude = addresses.get(0).getLongitude();
-                return new LatLng(latitude, longitude);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    // Method to calculate distance between two coordinates in meters
-    private float calculateDistance(LatLng startPoint, LatLng endPoint) {
-        Location startLocation = new Location("");
-        startLocation.setLatitude(startPoint.latitude);
-        startLocation.setLongitude(startPoint.longitude);
-
-        Location endLocation = new Location("");
-        endLocation.setLatitude(endPoint.latitude);
-        endLocation.setLongitude(endPoint.longitude);
-
-        return startLocation.distanceTo(endLocation);
-    }
 
 
 }
