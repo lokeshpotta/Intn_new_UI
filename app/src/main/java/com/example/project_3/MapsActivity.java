@@ -285,6 +285,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuid);
             boolean connected = false;
+            int maxRetry= 0;
             while (!connected) {
                 try {
                     if (!bluetoothSocket.isConnected()) {
@@ -292,12 +293,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                     connected = true; // Connection successful
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    try {
-                        Thread.sleep(1000); // Adjust the delay time as needed
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                    }
+                    Toast.makeText(MapsActivity.this, "Unable to Connect to Bluetooth", Toast.LENGTH_SHORT).show();
+                }
+                maxRetry= maxRetry+1;
+                if(maxRetry>2){
+                    break;
                 }
             }
             // Start reading data from the Bluetooth socket
